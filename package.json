@@ -1,0 +1,15 @@
+{
+  "name": "@slnko/customer-auth",
+  "version": "1.0.0",
+  "description": "Centralized Customer Authentication & RBAC for SLnko Platform",
+  "main": "index.js",
+  "private": true,
+  "author": "SLnko Energy",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.2"
+  }
+}
