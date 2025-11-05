@@ -28,12 +28,8 @@ const createCustomer = async (req, res) => {
       username,
       phone,
       password,
-      department,
       roles,
-      location,
-      emp_id,
       attachment_url,
-      about,
     } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const customer = new Customer({
@@ -42,15 +38,11 @@ const createCustomer = async (req, res) => {
       username,
       phone,
       password: hashedPassword,
-      department,
       roles,
-      location,
-      emp_id,
       attachment_url,
-      about,
     });
     await customer.save();
-    const populatedCustomer = await Customer.findById(customer._id).populate(populateCustomer);
+    const populatedCustomer = await Customer.findById(customer._id);
     res.status(201).json(populatedCustomer);
   } catch (err) {
     res.status(500).json({ error: err.message });

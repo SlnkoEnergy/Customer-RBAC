@@ -12,8 +12,6 @@ router.post("/login", customerController.loginCustomer);
 // Create a new Customer
 router.post(
   "/",
-  auth,
-  access("create", "Customer"),
   customerController.createCustomer
 );
 
