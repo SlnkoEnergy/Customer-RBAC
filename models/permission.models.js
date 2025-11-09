@@ -6,4 +6,4 @@ const permissionSchema = new mongoose.Schema({
   access: [{ type: String, enum: ["create", "read", "update", "delete"] }],
 });
 
-module.exports = mongoose.model("Permission", permissionSchema);
+module.exports = mongoose.model("CustomerPermission", permissionSchema);

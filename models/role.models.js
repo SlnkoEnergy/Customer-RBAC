@@ -5,4 +5,4 @@ const roleSchema = new mongoose.Schema({
   permissions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Permission" }],
 });
 
-module.exports = mongoose.model("Role", roleSchema);
+module.exports = mongoose.model("CustomerRole", roleSchema);

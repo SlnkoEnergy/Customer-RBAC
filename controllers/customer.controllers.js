@@ -22,15 +22,8 @@ const populateCustomer = [
 
 const createCustomer = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      username,
-      phone,
-      password,
-      roles,
-      attachment_url,
-    } = req.body;
+    const { name, email, username, phone, password, roles, attachment_url } =
+      req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const customer = new Customer({
       name,
@@ -70,7 +63,9 @@ const getCustomers = async (req, res) => {
       .skip(skip)
       .limit(pageSize);
 
-    res.status(200).json({ message: "Customers fetched successfully", customers });
+    res
+      .status(200)
+      .json({ message: "Customers fetched successfully", customers });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -78,7 +73,9 @@ const getCustomers = async (req, res) => {
 
 const getCustomerById = async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id).populate(populateCustomer);
+    const customer = await Customer.findById(req.params.id).populate(
+      populateCustomer
+    );
     if (!customer) return res.status(404).json({ error: "Customer not found" });
     res.json(customer);
   } catch (err) {
@@ -93,9 +90,13 @@ const updateCustomer = async (req, res) => {
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
-    const customer = await Customer.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-    }).populate(populateCustomer);
+    const customer = await Customer.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      {
+        new: true,
+      }
+    ).populate(populateCustomer);
     if (!customer) return res.status(404).json({ error: "Customer not found" });
     res.json(customer);
   } catch (err) {
@@ -117,7 +118,8 @@ const loginCustomer = async (req, res) => {
   try {
     const { name, password } = req.body;
     const customer = await Customer.findOne({ name });
-    if (!customer) return res.status(401).json({ error: "Invalid credentials" });
+    if (!customer)
+      return res.status(401).json({ error: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, customer.password);
 
@@ -128,7 +130,9 @@ const loginCustomer = async (req, res) => {
       config.jwtSecret,
       { expiresIn: "1d" }
     );
-    const populatedCustomer = await Customer.findById(customer._id).populate(populateCustomer);
+    const populatedCustomer = await Customer.findById(customer._id).populate(
+      populateCustomer
+    );
     res.json({ token, customer: populatedCustomer });
   } catch (err) {
     res.status(500).json({ error: err.message });

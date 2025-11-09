@@ -1,5 +1,4 @@
 // ...existing code...
-// User routes will go here
 const express = require("express");
 const router = express.Router();
 const customerController = require("../controllers/customer.controllers");
@@ -10,10 +9,7 @@ const access = require("../middlewares/access.middlewares");
 router.post("/login", customerController.loginCustomer);
 
 // Create a new Customer
-router.post(
-  "/",
-  customerController.createCustomer
-);
+router.post("/", customerController.createCustomer);
 
 // Get all Customers
 router.get(

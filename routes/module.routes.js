@@ -7,10 +7,10 @@ const auth = require('../middlewares/auth.middlewares');
 const access = require('../middlewares/access.middlewares');
 
 // Create a new module
-router.post('/', auth, access('create', 'module'), moduleController.createModule);
+router.post('/', auth, moduleController.createModule);
 
 // Get all modules
-router.get('/', auth, access('read', 'module'), moduleController.getModules);
+router.get('/', auth, moduleController.getModules);
 
 // Get a single module by ID
 router.get('/:id', auth, access('read', 'module'), moduleController.getModuleById);
