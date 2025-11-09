@@ -1,12 +1,21 @@
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 
 const customerRoutes = require("./routes/customer.routes");
 const roleRoutes = require("./routes/role.routes");
 const permissionRoutes = require("./routes/permission.routes");
 const moduleRoutes = require("./routes/module.routes");
 
-function createApp() {
+async function createApp() {
+  // Connect once, using env provided by the parent process
+  if (mongoose.connection.readyState === 0) {
+    const uri = process.env.MONGO_URI || process.env.DB_DEVELOPMENT_URL;
+    if (!uri) throw new Error("[customer-auth] MONGO_URI/DB_DEVELOPMENT_URL not set");
+    await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
+    console.log("[customer-auth] MongoDB connected");
+  }
+
   const app = express();
   app.use(express.json());
 
@@ -16,9 +25,9 @@ function createApp() {
 
   app.use(
     cors({
-      origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) callback(null, true);
-        else callback(new Error("Not allowed by CORS"));
+      origin(origin, cb) {
+        if (!origin || allowedOrigins.includes(origin)) cb(null, true);
+        else cb(new Error("Not allowed by CORS"));
       },
       credentials: true,
     })
@@ -30,9 +39,7 @@ function createApp() {
   app.use("/rbac/permissions", permissionRoutes);
   app.use("/rbac/modules", moduleRoutes);
 
-  // Home route
-  app.get("/", (req, res) => res.send("Access Control RBAC API"));
-
+  app.get("/", (_, res) => res.send("Access Control RBAC API"));
   return app;
 }
 

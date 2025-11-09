@@ -3,22 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config/app.config");
 
-const populateCustomer = [
-  { path: "department", populate: { path: "name" } },
-  {
-    path: "roles",
-    populate: [
-      {
-        path: "permissions",
-        populate: { path: "module", select: "name" },
-      },
-      {
-        path: "department",
-        select: "name",
-      },
-    ],
-  },
-];
 
 const createCustomer = async (req, res) => {
   try {
@@ -59,7 +43,6 @@ const getCustomers = async (req, res) => {
     }
 
     const customers = await Customer.find(query)
-      .populate(populateCustomer)
       .skip(skip)
       .limit(pageSize);
 
@@ -73,9 +56,7 @@ const getCustomers = async (req, res) => {
 
 const getCustomerById = async (req, res) => {
   try {
-    const customer = await Customer.findById(req.params.id).populate(
-      populateCustomer
-    );
+    const customer = await Customer.findById(req.params.id);
     if (!customer) return res.status(404).json({ error: "Customer not found" });
     res.json(customer);
   } catch (err) {
@@ -96,7 +77,7 @@ const updateCustomer = async (req, res) => {
       {
         new: true,
       }
-    ).populate(populateCustomer);
+    );
     if (!customer) return res.status(404).json({ error: "Customer not found" });
     res.json(customer);
   } catch (err) {
@@ -130,9 +111,7 @@ const loginCustomer = async (req, res) => {
       config.jwtSecret,
       { expiresIn: "1d" }
     );
-    const populatedCustomer = await Customer.findById(customer._id).populate(
-      populateCustomer
-    );
+    const populatedCustomer = await Customer.findById(customer._id);
     res.json({ token, customer: populatedCustomer });
   } catch (err) {
     res.status(500).json({ error: err.message });
