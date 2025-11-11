@@ -19,6 +19,9 @@ router.get(
   customerController.getCustomers
 );
 
+// Get customer for themselves while login
+router.get('/me', auth, customerController.me);
+
 // Get a single Customer by ID
 router.get(
   "/:id",
@@ -30,8 +33,6 @@ router.get(
 // Update a Customer
 router.put(
   "/:id",
-  auth,
-  access("update", "Customer"),
   customerController.updateCustomer
 );
 

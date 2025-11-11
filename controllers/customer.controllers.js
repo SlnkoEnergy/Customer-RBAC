@@ -64,10 +64,51 @@ const getCustomerById = async (req, res) => {
   }
 };
 
+const me = async (req, res) => {
+  try {
+    const customerId = req?.customer?.id;
+    console.log({customerId});
+    if (!customerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const populatedCustomer = await Customer.findById(customerId)
+      .select("-password -__v")
+      .populate({
+        path: "roles",
+        model: "CustomerRole", 
+        select: "_id name permissions",
+        populate: {
+          path: "permissions",
+          model: "CustomerPermission",
+          select: "_id name access module",
+          populate: {
+            path: "module",
+            model: "CustomerModule",
+            select: "_id name",
+          },
+        },
+      })
+      .lean();
+
+    if (!populatedCustomer) {
+      return res.status(404).json({ message: "User Not found" });
+    }
+
+    return res.json({
+      message: "User Fetched Successfully",
+      customer: populatedCustomer,
+    });
+  } catch (error) {
+    console.error("[me] error:", error);
+    return res.status(500).json({ error: error?.message || "Server error" });
+  }
+};
+
 const updateCustomer = async (req, res) => {
   try {
-    const { name, email, password, departments, roles } = req.body;
-    let updateData = { name, email, departments, roles };
+    const { name, email, password, urls, sidebar, roles } = req.body;
+    let updateData = {name, email, password, urls, sidebar, roles };
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
@@ -76,7 +117,7 @@ const updateCustomer = async (req, res) => {
       updateData,
       {
         new: true,
-      }
+      },
     );
     if (!customer) return res.status(404).json({ error: "Customer not found" });
     res.json(customer);
@@ -97,24 +138,54 @@ const deleteCustomer = async (req, res) => {
 
 const loginCustomer = async (req, res) => {
   try {
-    const { name, password } = req.body;
-    const customer = await Customer.findOne({ name });
-    if (!customer)
+    const { email, password } = req.body ?? {};
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const customer = await Customer.findOne({ email }).select("+password");
+    if (!customer) {
       return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, customer.password);
-
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     const token = jwt.sign(
       { id: customer._id, name: customer.name },
       config.jwtSecret,
       { expiresIn: "1d" }
     );
-    const populatedCustomer = await Customer.findById(customer._id);
-    res.json({ token, customer: populatedCustomer });
+
+    const populatedCustomer = await Customer.findById(customer._id)
+      .select("-password -__v")
+      .populate({
+        path: "roles",
+        model: "CustomerRole",
+        select: "_id name permissions",
+        populate: {
+          path: "permissions",
+          model: "CustomerPermission",
+          select: "_id name access module",
+          populate: {
+            path: "module",
+            model: "CustomerModule",
+            select: "_id name",
+          },
+        },
+      })
+      .lean();
+
+    return res.json({
+      message: "User Logged In Successfully",
+      token,
+      customer: populatedCustomer,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("[loginCustomer] error:", err);
+    return res.status(500).json({ error: err.message || "Server error" });
   }
 };
 
@@ -125,4 +196,5 @@ module.exports = {
   updateCustomer,
   deleteCustomer,
   loginCustomer,
+  me
 };

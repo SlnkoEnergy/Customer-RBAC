@@ -1,59 +1,100 @@
-// authorize.js
+// middleware/authorize.js
 const mongoose = require("mongoose");
-const Customer = require("../models/customer.models");
+const Customer = require("../models/customer.models"); 
+require("../models/role.models");
+require("../models/permission.models");
+require("../models/module.models");
+
+// normalize action to one of: create | read | update | delete
+function normalizeAction(a) {
+  const x = String(a || "").trim().toLowerCase();
+  if (["get", "read", "list", "fetch", "view"].includes(x)) return "read";
+  if (["post", "create", "add", "new"].includes(x)) return "create";
+  if (["put", "patch", "edit", "update"].includes(x)) return "update";
+  if (["del", "delete", "remove"].includes(x)) return "delete";
+  return x; // assume already one of CRUD
+}
+
+// normalize resource into matcher: id or name(s)
+function toResourceMatchers(res) {
+  if (Array.isArray(res)) return res.map(toResourceMatchers).flat();
+  if (!res) return [];
+  const s = String(res).trim();
+  const isId = mongoose.isValidObjectId(s);
+  return [{ kind: isId ? "id" : "name", value: s.toLowerCase() }];
+}
 
 module.exports = (action, resource) => async (req, res, next) => {
   try {
-    const customerId = req.customer?.id;
-    if (!customerId)
-      return res.status(403).json({ error: "customer not authenticated" });
+    const customerId =
+      req?.user?.userId || req?.user?.id || req?.customer?.id || null;
 
-    const customer = await Customer.findById(customerId).populate({
-      path: "roles",
-      populate: {
-        path: "permissions",
-        model: "Permission",
+    if (!customerId) {
+      return res.status(403).json({ error: "Customer not authenticated" });
+    }
+
+    // Fetch customer with deep RBAC populate
+    const customer = await Customer.findById(customerId)
+      .select("_id name roles")
+      .populate({
+        path: "roles",
+        model: "CustomerRole", // override schema ref if needed
+        select: "_id name permissions",
         populate: {
-          path: "module",
-          model: "Module",
-          select: "name",
+          path: "permissions",
+          model: "CustomerPermission",
+          select: "_id name access module",
+          populate: {
+            path: "module",
+            model: "CustomerModule",
+            select: "_id name",
+          },
         },
-      },
-    });
+      })
+      .lean();
 
-    if (!customer) return res.status(403).json({ error: "Customer not found" });
+    if (!customer) {
+      return res.status(403).json({ error: "Customer not found" });
+    }
 
-    const isAdmin = customer.roles?.some(
-      (r) => r?.name === "superadmin" || r?.name === "admin"
+    // Superusers bypass checks
+    const isAdmin = (customer.roles || []).some(
+      (r) => ["superadmin", "admin"].includes(String(r?.name || "").toLowerCase())
     );
     if (isAdmin) return next();
 
-    const act = String(action || "").toLowerCase();
-    const resIsObjectId = mongoose.isValidObjectId(resource);
+    const act = normalizeAction(action);
+    const needed = toResourceMatchers(resource);
 
-    const hasPermission = customer.roles?.some((role) =>
-      role?.permissions?.some((perm) => {
+    // If no resource specified, just check action exists anywhere
+    const hasPermission = (customer.roles || []).some((role) =>
+      (role.permissions || []).some((perm) => {
+        // access array like ["create","read",...]
         const access = (perm?.access || []).map((a) => String(a).toLowerCase());
+        if (!access.includes(act)) return false;
 
-        const modDoc =
-          perm?.module && typeof perm.module === "object" ? perm.module : null;
-        const modId = modDoc?._id?.toString() || perm?.module?.toString?.();
-        const modName = modDoc?.name?.trim?.();
+        const mod = perm?.module || null;
+        if (!mod) return false;
 
-        const moduleMatches =
-          (resIsObjectId && modId === String(resource)) ||
-          (!resIsObjectId &&
-            modName &&
-            modName.toLowerCase() === String(resource).toLowerCase());
+        // If no resource constraint, any module with the action is okay
+        if (needed.length === 0) return true;
 
-        return moduleMatches && access.includes(act);
+        const modId = mod?._id ? String(mod._id) : "";
+        const modName = String(mod?.name || "").toLowerCase();
+
+        return needed.some((n) =>
+          n.kind === "id" ? modId === n.value : modName === n.value
+        );
       })
     );
 
-    if (!hasPermission) return res.status(403).json({ error: "Access denied" });
-    next();
+    if (!hasPermission) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    return next();
   } catch (err) {
-    console.error("authorize error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("[authorize] error:", err);
+    return res.status(500).json({ error: err?.message || "Server error" });
   }
 };
