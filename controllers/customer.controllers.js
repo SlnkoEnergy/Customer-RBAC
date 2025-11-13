@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config/app.config");
 
-
 const createCustomer = async (req, res) => {
   try {
     const { name, email, username, phone, password, roles, attachment_url } =
@@ -42,9 +41,7 @@ const getCustomers = async (req, res) => {
       ];
     }
 
-    const customers = await Customer.find(query)
-      .skip(skip)
-      .limit(pageSize);
+    const customers = await Customer.find(query).skip(skip).limit(pageSize);
 
     res
       .status(200)
@@ -76,7 +73,7 @@ const me = async (req, res) => {
       .select("-password -__v")
       .populate({
         path: "roles",
-        model: "CustomerRole", 
+        model: "CustomerRole",
         select: "_id name permissions",
         populate: {
           path: "permissions",
@@ -108,7 +105,7 @@ const me = async (req, res) => {
 const updateCustomer = async (req, res) => {
   try {
     const { name, email, password, urls, sidebar, roles } = req.body;
-    let updateData = {name, email, password, urls, sidebar, roles };
+    let updateData = { name, email, password, urls, sidebar, roles };
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
@@ -117,7 +114,7 @@ const updateCustomer = async (req, res) => {
       updateData,
       {
         new: true,
-      },
+      }
     );
     if (!customer) return res.status(404).json({ error: "Customer not found" });
     res.json(customer);
@@ -196,5 +193,5 @@ module.exports = {
   updateCustomer,
   deleteCustomer,
   loginCustomer,
-  me
+  me,
 };

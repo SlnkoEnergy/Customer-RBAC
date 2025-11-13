@@ -5,6 +5,9 @@ const customerSchema = new mongoose.Schema({
   username: { type: String, trim: true, unique: true },
   email: { type: String, trim: true, unique: true, required: true },
   password: { type: String, required: true },
+  company: {
+    type: String,
+  },
   phone: [
     {
       type: String,
@@ -63,6 +66,6 @@ const customerSchema = new mongoose.Schema({
   profile_url: {
     type: String,
   },
-}); 
+});
 
 module.exports = mongoose.model("Customer", customerSchema);
