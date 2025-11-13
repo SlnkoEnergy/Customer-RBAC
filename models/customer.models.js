@@ -63,6 +63,6 @@ const customerSchema = new mongoose.Schema({
   profile_url: {
     type: String,
   },
-});
+}); 
 
 module.exports = mongoose.model("Customer", customerSchema);

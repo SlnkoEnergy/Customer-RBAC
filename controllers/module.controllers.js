@@ -3,9 +3,9 @@ const Module = require("../models/module.models");
 // Create a new module
 exports.createModule = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, type } = req.body;
     // Only store IDs, not full objects
-    const moduleObj = new Module({ name, description });
+    const moduleObj = new Module({ name, description, type });
     await moduleObj.save();
     // Return populated module for API response
     const populatedModule = await Module.findById(moduleObj._id);

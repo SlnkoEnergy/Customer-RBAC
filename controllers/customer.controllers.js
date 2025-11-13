@@ -67,7 +67,7 @@ const getCustomerById = async (req, res) => {
 const me = async (req, res) => {
   try {
     const customerId = req?.customer?.id;
-    console.log({customerId});
+
     if (!customerId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -85,7 +85,7 @@ const me = async (req, res) => {
           populate: {
             path: "module",
             model: "CustomerModule",
-            select: "_id name",
+            select: "_id name type",
           },
         },
       })

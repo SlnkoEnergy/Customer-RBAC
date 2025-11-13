@@ -19,6 +19,6 @@ router.get('/:id', auth, access('read', 'role'), roleController.getRoleById);
 router.delete('/:id', auth, access('delete', 'role'), roleController.deleteRole);
 
 // Assign permissions to a role
-router.put('/:id/permissions', auth, access('update', 'role'), roleController.assignPermissions);
+router.put('/:id/permissions', auth,  roleController.assignPermissions);
 
 module.exports = router;
