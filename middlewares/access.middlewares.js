@@ -38,7 +38,7 @@ module.exports = (action, resource) => async (req, res, next) => {
       .select("_id name roles")
       .populate({
         path: "roles",
-        model: "CustomerRole", // override schema ref if needed
+        model: "CustomerRole", 
         select: "_id name permissions",
         populate: {
           path: "permissions",

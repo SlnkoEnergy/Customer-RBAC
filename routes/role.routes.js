@@ -6,7 +6,7 @@ const auth = require('../middlewares/auth.middlewares');
 const access = require('../middlewares/access.middlewares');
 
 // Create a new role
-router.post('/', roleController.createRole);
+router.post('/',auth, roleController.createRole);
 
 // Get all roles
 router.get('/', auth, access('read', 'role'), roleController.getRoles);
