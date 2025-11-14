@@ -9,7 +9,7 @@ const access = require('../middlewares/access.middlewares');
 router.post('/',auth, roleController.createRole);
 
 // Get all roles
-router.get('/', auth, access('read', 'role'), roleController.getRoles);
+router.get('/', auth, roleController.getRoles);
 
 // Get a single role by ID
 router.get('/:id', auth, access('read', 'role'), roleController.getRoleById);
