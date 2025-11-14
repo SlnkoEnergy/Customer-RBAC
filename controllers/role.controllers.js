@@ -1,7 +1,7 @@
 // ...existing code...
 const Role = require("../models/role.models");
-const Permission = require("../models/customerPermission.model");
-const Module = require("../models/customerModule.model");
+const Permission = require("../models/permission.models");
+const Module = require("../models/module.models");
 const Customer = require("../models/customer.models");
 
 const ALLOWED_ACCESS = ["create", "read", "update", "delete"];
