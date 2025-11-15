@@ -4,10 +4,8 @@ const Module = require("../models/module.models");
 exports.createModule = async (req, res) => {
   try {
     const { name, description, type } = req.body;
-    // Only store IDs, not full objects
     const moduleObj = new Module({ name, description, type });
     await moduleObj.save();
-    // Return populated module for API response
     const populatedModule = await Module.findById(moduleObj._id);
     res.status(201).json(populatedModule);
   } catch (err) {
@@ -19,7 +17,7 @@ exports.createModule = async (req, res) => {
 exports.getModules = async (req, res) => {
   try {
     const modules = await Module.find();
-    res.json(modules);
+    res.json({ message: "Module Fetched Successfully", data: modules });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

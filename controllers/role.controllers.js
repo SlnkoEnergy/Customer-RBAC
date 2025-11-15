@@ -14,11 +14,11 @@ exports.createRole = async (req, res) => {
       return res.status(400).json({ error: "Role name is required" });
     }
 
-    const creatorId = req.customer?.id;
+    const creatorId = req.customer?.id ;
     if (!creatorId) {
       return res
         .status(400)
-        .json({ error: "createdBy is required (or req.user not set)" });
+        .json({ error: "createdBy is required (or req.customer not set)" });
     }
 
     if (!icon) {
